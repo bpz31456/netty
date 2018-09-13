@@ -26,6 +26,7 @@ import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ReflectiveChannelFactory;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.internal.SocketUtils;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
@@ -75,6 +76,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 注册一个group
      * The {@link EventLoopGroup} which is used to handle all the events for the to-be-created
      * {@link Channel}
      */
@@ -89,12 +91,17 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return self();
     }
 
+    /**
+     * 由父类（自己）直接强转为子类B
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private B self() {
         return (B) this;
     }
 
     /**
+     * 根据通道类型绑定一个工厂
      * The {@link Class} which is used to create {@link Channel} instances from.
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
      * {@link Channel} implementation has no no-args constructor.
@@ -103,10 +110,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
         }
+        //这里注册一个通道工厂
         return channelFactory(new ReflectiveChannelFactory<C>(channelClass));
     }
 
     /**
+     * 手动注册一个通道工厂
      * @deprecated Use {@link #channelFactory(io.netty.channel.ChannelFactory)} instead.
      */
     @Deprecated
@@ -123,6 +132,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 手动注册
      * {@link io.netty.channel.ChannelFactory} which is used to create {@link Channel} instances from
      * when calling {@link #bind()}. This method is usually only used if {@link #channel(Class)}
      * is not working for you because of some more complex needs. If your {@link Channel} implementation
@@ -135,6 +145,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 绑定本地地址
      * The {@link SocketAddress} which is used to bind the local "end" to.
      */
     public B localAddress(SocketAddress localAddress) {
@@ -143,6 +154,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 绑定本地地址
      * @see #localAddress(SocketAddress)
      */
     public B localAddress(int inetPort) {
@@ -150,6 +162,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 绑定到默认host，有多个网卡时
      * @see #localAddress(SocketAddress)
      */
     public B localAddress(String inetHost, int inetPort) {
@@ -164,6 +177,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 通道选项
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
      */
@@ -184,6 +198,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 创建通道时的属性
      * Allow to specify an initial attribute of the newly created {@link Channel}.  If the {@code value} is
      * {@code null}, the attribute of the specified {@code key} is removed.
      */
@@ -204,6 +219,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 校验参数
      * Validate all the parameters. Sub-classes may override this, but should
      * call the super method in that case.
      */
@@ -372,6 +388,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 注册处理者
      * the {@link ChannelHandler} to use for serving the requests.
      */
     public B handler(ChannelHandler handler) {

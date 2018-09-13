@@ -50,13 +50,15 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Bootstrap.class);
 
+    /**
+     * 地址解析器
+     */
     private static final AddressResolverGroup<?> DEFAULT_RESOLVER = DefaultAddressResolverGroup.INSTANCE;
 
     private final BootstrapConfig config = new BootstrapConfig(this);
 
     @SuppressWarnings("unchecked")
-    private volatile AddressResolverGroup<SocketAddress> resolver =
-            (AddressResolverGroup<SocketAddress>) DEFAULT_RESOLVER;
+    private volatile AddressResolverGroup<SocketAddress> resolver = (AddressResolverGroup<SocketAddress>) DEFAULT_RESOLVER;
     private volatile SocketAddress remoteAddress;
 
     public Bootstrap() { }
@@ -82,6 +84,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
     }
 
     /**
+     * 远程地址
      * The {@link SocketAddress} to connect to once the {@link #connect()} method
      * is called.
      */
@@ -107,6 +110,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
     }
 
     /**
+     * 连接
      * Connect a {@link Channel} to the remote peer.
      */
     public ChannelFuture connect() {
@@ -157,6 +161,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
     }
 
     /**
+     * 解析并且连接远程服务
      * @see #connect()
      */
     private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
@@ -193,6 +198,14 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         }
     }
 
+    /**
+     * 解析和连接
+     * @param channel
+     * @param remoteAddress
+     * @param localAddress
+     * @param promise
+     * @return
+     */
     private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress,
                                                final SocketAddress localAddress, final ChannelPromise promise) {
         try {

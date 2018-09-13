@@ -46,12 +46,23 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     private final Map<ChannelOption<?>, Object> childOptions = new LinkedHashMap<ChannelOption<?>, Object>();
     private final Map<AttributeKey<?>, Object> childAttrs = new LinkedHashMap<AttributeKey<?>, Object>();
+    /**
+     * 配置
+     */
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
     private volatile EventLoopGroup childGroup;
     private volatile ChannelHandler childHandler;
 
+
+    /**
+     * 实例化
+     */
     public ServerBootstrap() { }
 
+    /**
+     * 利用已有的ServerBootStrap
+     * @param bootstrap
+     */
     private ServerBootstrap(ServerBootstrap bootstrap) {
         super(bootstrap);
         childGroup = bootstrap.childGroup;
@@ -65,6 +76,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
+     * 设置eventGroup
      * Specify the {@link EventLoopGroup} which is used for the parent (acceptor) and the child (client).
      */
     @Override
@@ -90,6 +102,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
+     * child选项
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they get created
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
@@ -111,6 +124,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
+     * child属性
      * Set the specific {@link AttributeKey} with the given value on every child {@link Channel}. If the value is
      * {@code null} the {@link AttributeKey} is removed
      */
@@ -127,6 +141,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
+     * childHandler,具体业务处理器
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
@@ -137,15 +152,22 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return this;
     }
 
+    /**
+     * 父类注册处理自己的通道
+     * @param channel
+     * @throws Exception
+     */
     @Override
     void init(Channel channel) throws Exception {
         final Map<ChannelOption<?>, Object> options = options0();
         synchronized (options) {
+            //选项
             setChannelOptions(channel, options, logger);
         }
 
         final Map<AttributeKey<?>, Object> attrs = attrs0();
         synchronized (attrs) {
+            //属性
             for (Entry<AttributeKey<?>, Object> e: attrs.entrySet()) {
                 @SuppressWarnings("unchecked")
                 AttributeKey<Object> key = (AttributeKey<Object>) e.getKey();
@@ -153,6 +175,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
         }
 
+        //管道，进程内通信？
         ChannelPipeline p = channel.pipeline();
 
         final EventLoopGroup currentChildGroup = childGroup;
@@ -166,6 +189,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(0));
         }
 
+        //在管道中添加处理器
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) throws Exception {
@@ -175,6 +199,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                     pipeline.addLast(handler);
                 }
 
+                //通道中的时间循环
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -209,6 +234,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return new Map.Entry[size];
     }
 
+    /**
+     * 提供者
+     */
     private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {
 
         private final EventLoopGroup childGroup;

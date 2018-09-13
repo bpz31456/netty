@@ -30,6 +30,7 @@ import java.util.List;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
+ * 抽象地址解析
  * A skeletal {@link AddressResolver} implementation.
  */
 @UnstableApi

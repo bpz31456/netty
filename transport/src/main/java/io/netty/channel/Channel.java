@@ -178,12 +178,12 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     Unsafe unsafe();
 
     /**
-     * Return the assigned {@link ChannelPipeline}.
+     * Return the assigned(指定的) {@link ChannelPipeline}.
      */
     ChannelPipeline pipeline();
 
     /**
-     * Return the assigned {@link ByteBufAllocator} which will be used to allocate {@link ByteBuf}s.
+     * Return the assigned {@link ByteBufAllocator} which will be used to allocate(分配) {@link ByteBuf}s.
      */
     ByteBufAllocator alloc();
 

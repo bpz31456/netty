@@ -102,6 +102,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
      */
     public NioSocketChannel(Channel parent, SocketChannel socket) {
         super(parent, socket);
+        //配置
         config = new NioSocketChannelConfig(this, socket.socket());
     }
 
@@ -322,6 +323,10 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
         }
     }
 
+    /**
+     * 调用javaSocketChannel进行connect
+     * @throws Exception
+     */
     @Override
     protected void doFinishConnect() throws Exception {
         if (!javaChannel().finishConnect()) {
@@ -417,6 +422,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     // to check if the total size of all the buffers is non-zero.
                     // We limit the max amount to int above so cast is safe
                     long attemptedBytes = in.nioBufferSize();
+                    //写出去
                     final long localWrittenBytes = ch.write(nioBuffers, 0, nioBufferCnt);
                     if (localWrittenBytes <= 0) {
                         incompleteWrite(true);
@@ -430,6 +436,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     break;
                 }
             }
+            //自旋
         } while (writeSpinCount > 0);
 
         incompleteWrite(writeSpinCount < 0);
@@ -465,6 +472,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
         private volatile int maxBytesPerGatheringWrite = Integer.MAX_VALUE;
         private NioSocketChannelConfig(NioSocketChannel channel, Socket javaSocket) {
             super(channel, javaSocket);
+            //计算每次最大写
             calculateMaxBytesPerGatheringWrite();
         }
 

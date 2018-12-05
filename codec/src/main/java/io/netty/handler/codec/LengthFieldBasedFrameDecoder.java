@@ -184,15 +184,20 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final ByteOrder byteOrder;
+    //最大长度
     private final int maxFrameLength;
     private final int lengthFieldOffset;
     private final int lengthFieldLength;
     private final int lengthFieldEndOffset;
+    //长度调整
     private final int lengthAdjustment;
     private final int initialBytesToStrip;
+    //是否立即抛出错误，如果超出了最大长度
     private final boolean failFast;
+    //丢弃模式
     private boolean discardingTooLongFrame;
     private long tooLongFrameLength;
+    //丢弃了多长
     private long bytesToDiscard;
 
     /**
@@ -405,15 +410,19 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        //如果是丢弃模式
         if (discardingTooLongFrame) {
             discardingTooLongFrame(in);
         }
 
+        //长度不够
         if (in.readableBytes() < lengthFieldEndOffset) {
             return null;
         }
 
+        //实际长度偏移量
         int actualLengthFieldOffset = in.readerIndex() + lengthFieldOffset;
+        //得到一帧的长度
         long frameLength = getUnadjustedFrameLength(in, actualLengthFieldOffset, lengthFieldLength, byteOrder);
 
         if (frameLength < 0) {

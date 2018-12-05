@@ -79,6 +79,10 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
         return this;
     }
 
+    /**
+     * byteBuf释放
+     * @return
+     */
     @Override
     public boolean release() {
         return release0(1);

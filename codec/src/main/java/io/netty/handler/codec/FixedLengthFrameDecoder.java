@@ -35,6 +35,7 @@ import java.util.List;
  * | ABC | DEF | GHI |
  * +-----+-----+-----+
  * </pre>
+ * 固定长度解码器
  */
 public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
 
@@ -53,6 +54,13 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
         this.frameLength = frameLength;
     }
 
+    /**
+     * 读出固定长度，封装为一个object，其实是包装为了一个byteBuf
+     * @param ctx           the {@link ChannelHandlerContext} which this {@link ByteToMessageDecoder} belongs to
+     * @param in            the {@link ByteBuf} from which to read data
+     * @param out           the {@link List} to which decoded messages should be added
+     * @throws Exception
+     */
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         Object decoded = decode(ctx, in);
@@ -68,6 +76,7 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
      * @param   in              the {@link ByteBuf} from which to read data
      * @return  frame           the {@link ByteBuf} which represent the frame or {@code null} if no frame could
      *                          be created.
+     *                          读出固定长度
      */
     protected Object decode(
             @SuppressWarnings("UnusedParameters") ChannelHandlerContext ctx, ByteBuf in) throws Exception {

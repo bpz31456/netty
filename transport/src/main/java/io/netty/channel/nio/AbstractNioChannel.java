@@ -85,6 +85,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            //设置非阻塞
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
@@ -308,6 +309,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             // Regardless if the connection attempt was cancelled, channelActive() event should be triggered,
             // because what happened is what happened.
             if (!wasActive && active) {
+                //传播active事件
                 pipeline().fireChannelActive();
             }
 
@@ -328,6 +330,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             closeIfClosed();
         }
 
+        /**
+         * 连接操作
+         */
         @Override
         public final void finishConnect() {
             // Note this method is invoked by the event loop only if the connection attempt was
@@ -337,7 +342,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
             try {
                 boolean wasActive = isActive();
+                //连接
                 doFinishConnect();
+                //完成连接
                 fulfillConnectPromise(connectPromise, wasActive);
             } catch (Throwable t) {
                 fulfillConnectPromise(connectPromise, annotateConnectException(t, requestedRemoteAddress));
@@ -383,6 +390,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                //不关心事件
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
@@ -417,6 +425,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
         final int interestOps = selectionKey.interestOps();
         if ((interestOps & readInterestOp) == 0) {
+            //绑定读事件
             selectionKey.interestOps(interestOps | readInterestOp);
         }
     }

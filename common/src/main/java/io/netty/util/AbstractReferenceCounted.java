@@ -77,6 +77,8 @@ public abstract class AbstractReferenceCounted implements ReferenceCounted {
     }
 
     private boolean release0(int decrement) {
+        //获得原始的，0，decrement=1
+        //在底层寻找引用
         int oldRef = refCntUpdater.getAndAdd(this, -decrement);
         if (oldRef == decrement) {
             deallocate();

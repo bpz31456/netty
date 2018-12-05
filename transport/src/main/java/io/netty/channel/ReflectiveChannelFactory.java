@@ -32,6 +32,10 @@ public class ReflectiveChannelFactory<T extends Channel> implements ChannelFacto
         this.clazz = clazz;
     }
 
+    /**
+     * 设置channel的时候，设置的channel类型，调用channel类的构造器进行newInstance
+     * @return
+     */
     @Override
     public T newChannel() {
         try {

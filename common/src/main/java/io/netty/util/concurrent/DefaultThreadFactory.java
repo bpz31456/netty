@@ -83,6 +83,13 @@ public class DefaultThreadFactory implements ThreadFactory {
         }
     }
 
+    /**
+     * 名字格式化
+     * @param poolName
+     * @param daemon
+     * @param priority
+     * @param threadGroup
+     */
     public DefaultThreadFactory(String poolName, boolean daemon, int priority, ThreadGroup threadGroup) {
         if (poolName == null) {
             throw new NullPointerException("poolName");
@@ -121,6 +128,7 @@ public class DefaultThreadFactory implements ThreadFactory {
     }
 
     protected Thread newThread(Runnable r, String name) {
+        //真正的线程
         return new FastThreadLocalThread(threadGroup, r, name);
     }
 }

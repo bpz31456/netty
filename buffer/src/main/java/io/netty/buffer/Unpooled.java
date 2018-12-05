@@ -71,6 +71,9 @@ import java.util.List;
  */
 public final class Unpooled {
 
+    /**
+     * 默认UnPooledByteBuf分配器
+     */
     private static final ByteBufAllocator ALLOC = UnpooledByteBufAllocator.DEFAULT;
 
     /**

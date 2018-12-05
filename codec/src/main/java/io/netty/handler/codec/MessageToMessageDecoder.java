@@ -77,10 +77,17 @@ public abstract class MessageToMessageDecoder<I> extends ChannelInboundHandlerAd
         return matcher.match(msg);
     }
 
+    /**
+     * 读取消息，每次解析一个对象吗？
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         CodecOutputList out = CodecOutputList.newInstance();
         try {
+            //查找对象，传入进来的接口对象
             if (acceptInboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
                 I cast = (I) msg;
@@ -99,6 +106,7 @@ public abstract class MessageToMessageDecoder<I> extends ChannelInboundHandlerAd
         } finally {
             int size = out.size();
             for (int i = 0; i < size; i ++) {
+                //解析的对象向下传播
                 ctx.fireChannelRead(out.getUnsafe(i));
             }
             out.recycle();

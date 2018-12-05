@@ -33,12 +33,19 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
         if (isPowerOfTwo(executors.length)) {
+            //下标为0？
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
+            //下标为0？
             return new GenericEventExecutorChooser(executors);
         }
     }
 
+    /**
+     * 2的指数次
+     * @param val
+     * @return
+     */
     private static boolean isPowerOfTwo(int val) {
         return (val & -val) == val;
     }
@@ -53,6 +60,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
         @Override
         public EventExecutor next() {
+            //通过二进制&操作，提高取下标效率
             return executors[idx.getAndIncrement() & executors.length - 1];
         }
     }
@@ -67,6 +75,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
         @Override
         public EventExecutor next() {
+            //普通的取模操作，效率不高
             return executors[Math.abs(idx.getAndIncrement() % executors.length)];
         }
     }

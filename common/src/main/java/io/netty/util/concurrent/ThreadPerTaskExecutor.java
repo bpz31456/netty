@@ -18,6 +18,9 @@ package io.netty.util.concurrent;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
+/**
+ * 单线程任务执行器，直接
+ */
 public final class ThreadPerTaskExecutor implements Executor {
     private final ThreadFactory threadFactory;
 

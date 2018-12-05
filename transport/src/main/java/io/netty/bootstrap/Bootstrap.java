@@ -165,6 +165,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
      * @see #connect()
      */
     private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
+        //初始化和注册
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
 
@@ -172,6 +173,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
             if (!regFuture.isSuccess()) {
                 return regFuture;
             }
+            //做解析和连接
             return doResolveAndConnect0(channel, remoteAddress, localAddress, channel.newPromise());
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
@@ -271,6 +273,11 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         });
     }
 
+    /**
+     * 初始化channel
+     * @param channel
+     * @throws Exception
+     */
     @Override
     @SuppressWarnings("unchecked")
     void init(Channel channel) throws Exception {

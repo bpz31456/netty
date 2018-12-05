@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 服务端设置NioServerSocketChannel.class
  * A {@link io.netty.channel.socket.ServerSocketChannel} implementation which uses
  * NIO selector based implementation to accept new connections.
  */
@@ -46,10 +47,18 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
                              implements io.netty.channel.socket.ServerSocketChannel {
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
+    /**
+     * java api中的 SelectorProvider.provider
+     */
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioServerSocketChannel.class);
 
+    /**
+     * java api 中的ServerSocketChannel
+     * @param provider
+     * @return
+     */
     private static ServerSocketChannel newSocket(SelectorProvider provider) {
         try {
             /**
@@ -69,6 +78,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     /**
      * Create a new instance
+     * 无参构造器
      */
     public NioServerSocketChannel() {
         this(newSocket(DEFAULT_SELECTOR_PROVIDER));
@@ -85,7 +95,9 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        //设置为Accept类型的channel，这里设置了非阻塞，设置了channel的id，pipeline（head，tail），unsafe
         super(null, channel, SelectionKey.OP_ACCEPT);
+        //配置文件
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
 
@@ -127,6 +139,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {
         if (PlatformDependent.javaVersion() >= 7) {
+            //调用底层channel.bind()
             javaChannel().bind(localAddress, config.getBacklog());
         } else {
             javaChannel().socket().bind(localAddress, config.getBacklog());
@@ -138,12 +151,20 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         javaChannel().close();
     }
 
+    /**
+     * accept
+     * @param buf
+     * @return
+     * @throws Exception
+     */
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
+        //调用底层的accept得到socketChannel
         SocketChannel ch = SocketUtils.accept(javaChannel());
 
         try {
             if (ch != null) {
+                //封装SocketChannel
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }
@@ -192,6 +213,9 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 配置
+     */
     private final class NioServerSocketChannelConfig extends DefaultServerSocketChannelConfig {
         private NioServerSocketChannelConfig(NioServerSocketChannel channel, ServerSocket javaSocket) {
             super(channel, javaSocket);

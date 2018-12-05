@@ -38,6 +38,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
                 }
             };
 
+    /**
+     * 定时任务队列
+     */
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
 
     protected AbstractScheduledEventExecutor() {
@@ -108,6 +111,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         }
 
         if (scheduledTask.deadlineNanos() <= nanoTime) {
+            //超过时间的任务不在执行
             scheduledTaskQueue.remove();
             return scheduledTask;
         }
@@ -126,6 +130,10 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         return Math.max(0, scheduledTask.deadlineNanos() - nanoTime());
     }
 
+    /**
+     * 得到一个计划任务
+     * @return
+     */
     final ScheduledFutureTask<?> peekScheduledTask() {
         Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         if (scheduledTaskQueue == null) {

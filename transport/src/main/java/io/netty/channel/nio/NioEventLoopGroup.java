@@ -60,6 +60,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor) {
+        //每个group绑定一个选择器
         this(nThreads, executor, SelectorProvider.provider());
     }
 
@@ -79,11 +80,13 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
     public NioEventLoopGroup(
             int nThreads, Executor executor, final SelectorProvider selectorProvider) {
+        //cup*2 null provider
         this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor, final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory) {
+        //默认拒绝就是抛出一个exception
         super(nThreads, executor, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
     }
 
@@ -121,8 +124,16 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         }
     }
 
+    /**
+     * 通過一個executor的單綫执行者来new出一个新的eventLoop
+     * @param executor
+     * @param args
+     * @return
+     * @throws Exception
+     */
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
+        //每个eventLoop绑定Group创建时传入的一个事件选择器，事件选取策略，拒绝执行处理
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],
             ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);
     }

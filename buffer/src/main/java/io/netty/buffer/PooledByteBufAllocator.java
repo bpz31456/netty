@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 可重复利用的byteBuf分配器
+ */
 public class PooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PooledByteBufAllocator.class);
@@ -37,15 +40,22 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     private static final int DEFAULT_NUM_DIRECT_ARENA;
 
     private static final int DEFAULT_PAGE_SIZE;
-    private static final int DEFAULT_MAX_ORDER; // 8192 << 11 = 16 MiB per chunk
+    /**
+     * 8192 << 11 = 16 MiB per chunk
+     */
+    private static final int DEFAULT_MAX_ORDER;
     private static final int DEFAULT_TINY_CACHE_SIZE;
     private static final int DEFAULT_SMALL_CACHE_SIZE;
     private static final int DEFAULT_NORMAL_CACHE_SIZE;
+
     private static final int DEFAULT_MAX_CACHED_BUFFER_CAPACITY;
     private static final int DEFAULT_CACHE_TRIM_INTERVAL;
     private static final boolean DEFAULT_USE_CACHE_FOR_ALL_THREADS;
     private static final int DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT;
 
+    /**
+     * 4k
+     */
     private static final int MIN_PAGE_SIZE = 4096;
     private static final int MAX_CHUNK_SIZE = (int) (((long) Integer.MAX_VALUE + 1) / 2);
 
@@ -205,6 +215,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         this.tinyCacheSize = tinyCacheSize;
         this.smallCacheSize = smallCacheSize;
         this.normalCacheSize = normalCacheSize;
+        //chunkSize
         chunkSize = validateAndCalculateChunkSize(pageSize, maxOrder);
 
         if (nHeapArena < 0) {
@@ -299,6 +310,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     @Override
     protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+        //线程缓存
         PoolThreadCache cache = threadCache.get();
         PoolArena<byte[]> heapArena = cache.heapArena;
 
@@ -314,15 +326,24 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         return toLeakAwareBuffer(buf);
     }
 
+    /**
+     * 堆外内存缓存
+     * @param initialCapacity
+     * @param maxCapacity
+     * @return
+     */
     @Override
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
+        //获得threadCache中的directArena
         PoolThreadCache cache = threadCache.get();
         PoolArena<ByteBuffer> directArena = cache.directArena;
 
         final ByteBuf buf;
         if (directArena != null) {
+            //在一个arena中分配
             buf = directArena.allocate(cache, initialCapacity, maxCapacity);
         } else {
+            //是否用unsafe依赖系统
             buf = PlatformDependent.hasUnsafe() ?
                     UnsafeByteBufUtil.newUnsafeDirectByteBuf(this, initialCapacity, maxCapacity) :
                     new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);

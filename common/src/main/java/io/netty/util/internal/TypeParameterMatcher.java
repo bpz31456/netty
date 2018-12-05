@@ -24,6 +24,9 @@ import java.lang.reflect.TypeVariable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 类型参数匹配器
+ */
 public abstract class TypeParameterMatcher {
 
     private static final TypeParameterMatcher NOOP = new TypeParameterMatcher() {
@@ -149,6 +152,9 @@ public abstract class TypeParameterMatcher {
 
     public abstract boolean match(Object msg);
 
+    /**
+     * 默认的反射匹配
+     */
     private static final class ReflectiveMatcher extends TypeParameterMatcher {
         private final Class<?> type;
 
@@ -158,6 +164,7 @@ public abstract class TypeParameterMatcher {
 
         @Override
         public boolean match(Object msg) {
+            //是什么的实例
             return type.isInstance(msg);
         }
     }

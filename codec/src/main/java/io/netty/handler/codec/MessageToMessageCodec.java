@@ -78,6 +78,7 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends Cha
         @Override
         @SuppressWarnings("unchecked")
         protected void decode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
+            //解码
             MessageToMessageCodec.this.decode(ctx, (INBOUND_IN) msg, out);
         }
     };

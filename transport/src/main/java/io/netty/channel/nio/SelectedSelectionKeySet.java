@@ -20,6 +20,9 @@ import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
 
+/**
+ * 封装过的selectedSelectionKeySet
+ */
 final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
 
     SelectionKey[] keys;

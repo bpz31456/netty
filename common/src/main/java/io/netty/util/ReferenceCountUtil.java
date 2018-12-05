@@ -82,6 +82,7 @@ public final class ReferenceCountUtil {
     /**
      * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
+     * PooledUnsafeDirectByteBuf
      */
     public static boolean release(Object msg) {
         if (msg instanceof ReferenceCounted) {

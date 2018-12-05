@@ -43,15 +43,22 @@ final class PoolThreadCache {
     final PoolArena<byte[]> heapArena;
     final PoolArena<ByteBuffer> directArena;
 
-    // Hold the caches for the different size classes, which are tiny, small and normal.
+    /**
+     * Hold the caches for the different size classes, which are tiny, small and normal.
+     * 每个线程都持有不同规格的缓存tinySubPageHeapCaches[1] = 16b的queue array tinySubPageHeapCaches[2] = 32b .. arraytinySubPageHeapCaches[32] = 496b array
+     */
     private final MemoryRegionCache<byte[]>[] tinySubPageHeapCaches;
     private final MemoryRegionCache<byte[]>[] smallSubPageHeapCaches;
+    private final MemoryRegionCache<byte[]>[] normalHeapCaches;
+
     private final MemoryRegionCache<ByteBuffer>[] tinySubPageDirectCaches;
     private final MemoryRegionCache<ByteBuffer>[] smallSubPageDirectCaches;
-    private final MemoryRegionCache<byte[]>[] normalHeapCaches;
     private final MemoryRegionCache<ByteBuffer>[] normalDirectCaches;
 
-    // Used for bitshifting when calculate the index of normal caches later
+    /**
+     * Used for bitshifting when calculate the index of normal caches later
+     * 计算索引
+     */
     private final int numShiftsNormalDirect;
     private final int numShiftsNormalHeap;
     private final int freeSweepAllocationThreshold;
@@ -62,6 +69,16 @@ final class PoolThreadCache {
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
+    /**
+     * 初始化的时候就进行规格创建
+     * @param heapArena
+     * @param directArena
+     * @param tinyCacheSize
+     * @param smallCacheSize
+     * @param normalCacheSize
+     * @param maxCachedBufferCapacity
+     * @param freeSweepAllocationThreshold
+     */
     PoolThreadCache(PoolArena<byte[]> heapArena, PoolArena<ByteBuffer> directArena,
                     int tinyCacheSize, int smallCacheSize, int normalCacheSize,
                     int maxCachedBufferCapacity, int freeSweepAllocationThreshold) {
@@ -72,17 +89,24 @@ final class PoolThreadCache {
         this.freeSweepAllocationThreshold = freeSweepAllocationThreshold;
         this.heapArena = heapArena;
         this.directArena = directArena;
+
         if (directArena != null) {
+            //subPageCaches，512,32,SizeClass.Tiny
             tinySubPageDirectCaches = createSubPageCaches(
                     tinyCacheSize, PoolArena.numTinySubpagePools, SizeClass.Tiny);
+
+            //subPageCaches
             smallSubPageDirectCaches = createSubPageCaches(
                     smallCacheSize, directArena.numSmallSubpagePools, SizeClass.Small);
 
             numShiftsNormalDirect = log2(directArena.pageSize);
+
+            //normalCaches，SizeClass.Normal
             normalDirectCaches = createNormalCaches(
                     normalCacheSize, maxCachedBufferCapacity, directArena);
 
             directArena.numThreadCaches.getAndIncrement();
+            //directArena
         } else {
             // No directArea is configured so just null out all caches
             tinySubPageDirectCaches = null;
@@ -90,6 +114,7 @@ final class PoolThreadCache {
             normalDirectCaches = null;
             numShiftsNormalDirect = -1;
         }
+
         if (heapArena != null) {
             // Create the caches for the heap allocations
             tinySubPageHeapCaches = createSubPageCaches(
@@ -119,6 +144,14 @@ final class PoolThreadCache {
         }
     }
 
+    /**
+     * 创建subPageCaches
+     * @param cacheSize 512b
+     * @param numCaches 32长度
+     * @param sizeClass tiny
+     * @param <T>
+     * @return
+     */
     private static <T> MemoryRegionCache<T>[] createSubPageCaches(
             int cacheSize, int numCaches, SizeClass sizeClass) {
         if (cacheSize > 0 && numCaches > 0) {
@@ -134,6 +167,14 @@ final class PoolThreadCache {
         }
     }
 
+    /**
+     * 区域Caches
+     * @param cacheSize
+     * @param maxCachedBufferCapacity
+     * @param area
+     * @param <T>
+     * @return
+     */
     private static <T> MemoryRegionCache<T>[] createNormalCaches(
             int cacheSize, int maxCachedBufferCapacity, PoolArena<T> area) {
         if (cacheSize > 0 && maxCachedBufferCapacity > 0) {
@@ -208,6 +249,13 @@ final class PoolThreadCache {
         return cache.add(chunk, handle);
     }
 
+    /**
+     * 缓存
+     * @param area
+     * @param normCapacity
+     * @param sizeClass
+     * @return
+     */
     private MemoryRegionCache<?> cache(PoolArena<?> area, int normCapacity, SizeClass sizeClass) {
         switch (sizeClass) {
         case Normal:
@@ -366,14 +414,24 @@ final class PoolThreadCache {
         }
     }
 
+    /**
+     * 换缓存结构相关
+     * @param <T>
+     */
     private abstract static class MemoryRegionCache<T> {
+        /** N*16B 512B 1K 2K 4K 8K 16K 32K **/
+        //大小，并非长度
         private final int size;
+        /**chunk,handle*/
         private final Queue<Entry<T>> queue;
+        /**tiny,small,normal*/
         private final SizeClass sizeClass;
         private int allocations;
 
         MemoryRegionCache(int size, SizeClass sizeClass) {
+            //512
             this.size = MathUtil.safeFindNextPositivePowerOfTwo(size);
+            //512个长度的queue
             queue = PlatformDependent.newFixedMpscQueue(this.size);
             this.sizeClass = sizeClass;
         }

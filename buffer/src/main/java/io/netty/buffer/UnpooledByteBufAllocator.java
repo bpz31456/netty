@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 
 /**
  * Simplistic {@link ByteBufAllocator} implementation that does not pool anything.
+ * 不可重复利用的byteBuf分配器
  */
 public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {
 
@@ -77,6 +78,7 @@ public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator imp
                 && PlatformDependent.hasDirectBufferNoCleanerConstructor();
     }
 
+
     @Override
     protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
         return PlatformDependent.hasUnsafe() ?
@@ -84,9 +86,16 @@ public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator imp
                 new InstrumentedUnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
     }
 
+    /**
+     * 堆外不缓存
+     * @param initialCapacity
+     * @param maxCapacity
+     * @return
+     */
     @Override
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
         final ByteBuf buf;
+        //依赖系统底层得到safe或unsafe
         if (PlatformDependent.hasUnsafe()) {
             buf = noCleaner ? new InstrumentedUnpooledUnsafeNoCleanerDirectByteBuf(this, initialCapacity, maxCapacity) :
                     new InstrumentedUnpooledUnsafeDirectByteBuf(this, initialCapacity, maxCapacity);

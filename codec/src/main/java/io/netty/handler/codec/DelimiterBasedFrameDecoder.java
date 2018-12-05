@@ -54,6 +54,7 @@ import java.util.List;
  * | ABC\nDEF |
  * +----------+
  * </pre>
+ * 基于分隔符的解码器
  */
 public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
 
@@ -228,12 +229,15 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        //行处理器
         if (lineBasedDecoder != null) {
             return lineBasedDecoder.decode(ctx, buffer);
         }
         // Try all delimiters and choose the delimiter which yields the shortest frame.
+        //最小分隔符
         int minFrameLength = Integer.MAX_VALUE;
         ByteBuf minDelim = null;
+        //最小数据包长度
         for (ByteBuf delim: delimiters) {
             int frameLength = indexOf(buffer, delim);
             if (frameLength >= 0 && frameLength < minFrameLength) {

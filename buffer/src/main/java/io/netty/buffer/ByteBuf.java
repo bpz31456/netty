@@ -463,6 +463,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * reposition the current {@code readerIndex} to the marked
      * {@code readerIndex} by calling {@link #resetReaderIndex()}.
      * The initial value of the marked {@code readerIndex} is {@code 0}.
+     * 读标记
      */
     public abstract ByteBuf markReaderIndex();
 
@@ -473,6 +474,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if the current {@code writerIndex} is less than the marked
      *         {@code readerIndex}
+     * 回复
      */
     public abstract ByteBuf resetReaderIndex();
 

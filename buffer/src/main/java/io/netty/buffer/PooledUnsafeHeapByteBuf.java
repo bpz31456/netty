@@ -19,6 +19,9 @@ import io.netty.util.Recycler;
 import io.netty.util.Recycler.Handle;
 import io.netty.util.internal.PlatformDependent;
 
+/**
+ * 直接得到jdk底层对象
+ */
 final class PooledUnsafeHeapByteBuf extends PooledHeapByteBuf {
 
     private static final Recycler<PooledUnsafeHeapByteBuf> RECYCLER = new Recycler<PooledUnsafeHeapByteBuf>() {

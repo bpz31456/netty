@@ -89,6 +89,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      */
     private boolean registered;
 
+    /**
+     * 设置通道的时候，每个channel都有一个默认的pipeline，内建一个head和一个tail节点
+     * head是一个ChannelInboundHandler
+     * tail是一个ChannelOutboundHandler, ChannelInboundHandler
+     * @param channel
+     */
     protected DefaultChannelPipeline(Channel channel) {
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
         succeededFuture = new SucceededChannelFuture(channel, null);
@@ -962,6 +968,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        //从head开始向后传播读信息
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1016,6 +1023,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
+        //这里为啥是调用的tail来bind的
         return tail.bind(localAddress, promise);
     }
 
@@ -1383,14 +1391,27 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void read(ChannelHandlerContext ctx) {
+            //开始读取
             unsafe.beginRead();
         }
 
+        /**
+         * 写，添加到缓冲区中，并设置是否禁止添加到缓冲区
+         * @param ctx               the {@link ChannelHandlerContext} for which the write operation is made
+         * @param msg               the message to write
+         * @param promise           the {@link ChannelPromise} to notify once the operation completes
+         * @throws Exception
+         */
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
             unsafe.write(msg, promise);
         }
 
+        /**
+         * 通过底层的jdk自旋写出到socket中
+         * @param ctx               the {@link ChannelHandlerContext} for which the flush operation is made
+         * @throws Exception
+         */
         @Override
         public void flush(ChannelHandlerContext ctx) throws Exception {
             unsafe.flush();
@@ -1421,6 +1442,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             ctx.fireChannelActive();
 
+            //读取数据
             readIfIsAutoRead();
         }
 
@@ -1442,6 +1464,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
 
         private void readIfIsAutoRead() {
+            //自动读取
             if (channel.config().isAutoRead()) {
                 channel.read();
             }

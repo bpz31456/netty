@@ -30,7 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
+    /**线程池*/
     private final EventExecutor[] children;
+    /**只读线程池*/
     private final Set<EventExecutor> readonlyChildren;
     private final AtomicInteger terminatedChildren = new AtomicInteger();
     private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
@@ -55,6 +57,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor, Object... args) {
+        //默认的事件执行器选择器工厂
         this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
     }
 
@@ -72,7 +75,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             throw new IllegalArgumentException(String.format("nThreads: %d (expected: > 0)", nThreads));
         }
 
+        //默认为空
         if (executor == null) {
+            //单线程执行者
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
@@ -81,6 +86,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
+                //newChild
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
@@ -88,10 +94,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
                 if (!success) {
+                    //关闭之前的eventLoop
                     for (int j = 0; j < i; j ++) {
                         children[j].shutdownGracefully();
                     }
-
+                    //如果没能关闭掉，等待最大时长，异常就强行打断
                     for (int j = 0; j < i; j ++) {
                         EventExecutor e = children[j];
                         try {
@@ -108,8 +115,10 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         }
 
+        //选择下标为0的
         chooser = chooserFactory.newChooser(children);
 
+        //为所有的eventLoop添加终止事件
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
@@ -128,12 +137,21 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
     }
 
+    /**
+     * 线程工厂
+     * @return
+     */
     protected ThreadFactory newDefaultThreadFactory() {
         return new DefaultThreadFactory(getClass());
     }
 
+    /**
+     * chooser
+     * @return
+     */
     @Override
     public EventExecutor next() {
+        //chooser
         return chooser.next();
     }
 

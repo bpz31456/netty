@@ -108,6 +108,7 @@ public final class ChannelOutboundBuffer {
     /**
      * Add given message to this {@link ChannelOutboundBuffer}. The given {@link ChannelPromise} will be notified once
      * the message was written.
+     * 添加到缓冲区的业务逻辑
      */
     public void addMessage(Object msg, int size, ChannelPromise promise) {
         Entry entry = Entry.newInstance(msg, size, total(msg), promise);
@@ -128,6 +129,7 @@ public final class ChannelOutboundBuffer {
     }
 
     /**
+     * 添加flash状态
      * Add a flush to this {@link ChannelOutboundBuffer}. This means all previous added messages are marked as flushed
      * and so you will be able to handle them.
      */
@@ -147,6 +149,7 @@ public final class ChannelOutboundBuffer {
                 if (!entry.promise.setUncancellable()) {
                     // Was cancelled so make sure we free up memory and notify about the freed bytes
                     int pending = entry.cancel();
+                    //处理低水位问题
                     decrementPendingOutboundBytes(pending, false, true);
                 }
                 entry = entry.next;
@@ -165,12 +168,18 @@ public final class ChannelOutboundBuffer {
         incrementPendingOutboundBytes(size, true);
     }
 
+    /**
+     * 统计需要有多少bytes写出去
+     * @param size
+     * @param invokeLater
+     */
     private void incrementPendingOutboundBytes(long size, boolean invokeLater) {
         if (size == 0) {
             return;
         }
 
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, size);
+        //高水位
         if (newWriteBufferSize > channel.config().getWriteBufferHighWaterMark()) {
             setUnwritable(invokeLater);
         }
@@ -190,6 +199,7 @@ public final class ChannelOutboundBuffer {
         }
 
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, -size);
+        //低于低水位，就可以写，改变写状态
         if (notifyWritability && newWriteBufferSize < channel.config().getWriteBufferLowWaterMark()) {
             setWritable(invokeLater);
         }
@@ -577,12 +587,17 @@ public final class ChannelOutboundBuffer {
         }
     }
 
+    /**
+     * 设置为不可写状态
+     * @param invokeLater
+     */
     private void setUnwritable(boolean invokeLater) {
         for (;;) {
             final int oldValue = unwritable;
             final int newValue = oldValue | 1;
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
                 if (oldValue == 0 && newValue != 0) {
+                    //不可写状态
                     fireChannelWritabilityChanged(invokeLater);
                 }
                 break;

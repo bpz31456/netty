@@ -43,7 +43,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
         this(null);
     }
 
-    protected AbstractEventExecutor(EventExecutorGroup parent) {
+    protected  AbstractEventExecutor(EventExecutorGroup parent) {
         this.parent = parent;
     }
 
@@ -59,6 +59,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
 
     @Override
     public boolean inEventLoop() {
+        //第一次与main线程比较为false
         return inEventLoop(Thread.currentThread());
     }
 

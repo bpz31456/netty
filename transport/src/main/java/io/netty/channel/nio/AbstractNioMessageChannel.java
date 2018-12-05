@@ -31,6 +31,7 @@ import java.util.List;
 
 /**
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on messages.
+ * 处理连接的channel，accept类型的Select事件
  */
 public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
     boolean inputShutdown;
@@ -55,10 +56,16 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         super.doBeginRead();
     }
 
+    /**
+     * 数据读取
+     */
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
         private final List<Object> readBuf = new ArrayList<Object>();
 
+        /**
+         * 读取连接
+         */
         @Override
         public void read() {
             assert eventLoop().inEventLoop();
@@ -72,33 +79,43 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        //读取messages到readBuf中List，accept
                         int localRead = doReadMessages(readBuf);
+                        //没有读到连接
                         if (localRead == 0) {
                             break;
                         }
+                        //已经关闭没有读到数据
                         if (localRead < 0) {
                             closed = true;
                             break;
                         }
-
+                        //增量信息读取
                         allocHandle.incMessagesRead(localRead);
+                        //判断是否可以继续读取数据
                     } while (allocHandle.continueReading());
                 } catch (Throwable t) {
                     exception = t;
                 }
 
+                //读取到一个连接accept,里面封装了一个nioSocketChannel
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
+                    //每个List<Object>中的对象都要经行fire
+                    //head -> ServerBootstrapAcceptor(ServerBootStrap.ini()) -> tail
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
+                //传播完后就清空
                 readBuf.clear();
+                //读取完成？
                 allocHandle.readComplete();
+                //传播readComplete
                 pipeline.fireChannelReadComplete();
 
                 if (exception != null) {
                     closed = closeOnReadError(exception);
-
+                    //异常事件传播
                     pipeline.fireExceptionCaught(exception);
                 }
 
@@ -116,12 +133,18 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 //
                 // See https://github.com/netty/netty/issues/2254
                 if (!readPending && !config.isAutoRead()) {
+                    //删除读事件，accept事件
                     removeReadOp();
                 }
             }
         }
     }
 
+    /**
+     * 写数据到outBuffer
+     * @param in
+     * @throws Exception
+     */
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         final SelectionKey key = selectionKey();

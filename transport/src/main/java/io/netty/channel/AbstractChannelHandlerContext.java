@@ -193,6 +193,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return this;
     }
 
+    /**
+     * 指定channelactive
+     * @param next
+     */
     static void invokeChannelActive(final AbstractChannelHandlerContext next) {
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
@@ -341,9 +345,17 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return this;
     }
 
+    /**
+     * 度消息处理
+     * @param next
+     * @param msg
+     */
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
+        //得到消息msg，通过资源检测后得到的数据
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+        //执行器
         EventExecutor executor = next.executor();
+        //属于eventLoop
         if (executor.inEventLoop()) {
             next.invokeChannelRead(m);
         } else {
@@ -364,6 +376,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
                 notifyHandlerException(t);
             }
         } else {
+            //传播read事件
             fireChannelRead(msg);
         }
     }
@@ -482,9 +495,10 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
 
         final AbstractChannelHandlerContext next = findContextOutbound();
         EventExecutor executor = next.executor();
+        //在事件循环当中，就直接执行bind
         if (executor.inEventLoop()) {
             next.invokeBind(localAddress, promise);
-        } else {
+        } else {//不在的话就安全执行
             safeExecute(executor, new Runnable() {
                 @Override
                 public void run() {
@@ -495,6 +509,11 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return promise;
     }
 
+    /**
+     * 执行具体绑定
+     * @param localAddress
+     * @param promise
+     */
     private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
         if (invokeHandler()) {
             try {

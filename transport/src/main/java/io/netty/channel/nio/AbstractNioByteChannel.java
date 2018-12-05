@@ -63,6 +63,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
      * @param ch                the underlying {@link SelectableChannel} on which it operates
      */
     protected AbstractNioByteChannel(Channel parent, SelectableChannel ch) {
+        //读事件
         super(parent, ch, SelectionKey.OP_READ);
     }
 
@@ -94,6 +95,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 ((SocketChannelConfig) config).isAllowHalfClosure();
     }
 
+    /**
+     * 读取数据
+     */
     protected class NioByteUnsafe extends AbstractNioUnsafe {
 
         private void closeOnRead(ChannelPipeline pipeline) {
@@ -209,7 +213,15 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         return doWriteInternal(in, in.current());
     }
 
+    /**
+     * 具体的写到socket曹邹
+     * @param in
+     * @param msg
+     * @return
+     * @throws Exception
+     */
     private int doWriteInternal(ChannelOutboundBuffer in, Object msg) throws Exception {
+        //byteBuf
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
             if (!buf.isReadable()) {
@@ -225,6 +237,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 }
                 return 1;
             }
+            //文件区域
         } else if (msg instanceof FileRegion) {
             FileRegion region = (FileRegion) msg;
             if (region.transferred() >= region.count()) {
@@ -247,6 +260,11 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         return WRITE_STATUS_SNDBUF_FULL;
     }
 
+    /**
+     * 调用这个进行flush写出
+     * @param in
+     * @throws Exception
+     */
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         int writeSpinCount = config().getWriteSpinCount();
